@@ -4,14 +4,67 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TB Scanner</title>
+  <style>
+    video {
+      border: 2px solid black;
+    }
+    #status {
+      font-size: 1.2em;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
   <h1>TB Scanner</h1>
   <video id="preview" width="100%" autoplay playsinline></video>
-  <p id="status">Kamera başlatılıyor...</p>
+  <p id="status">📷 Kamera başlatılıyor...</p>
 
+  <!-- Gerekli scriptler -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
   <script src="tb-list.js"></script>
-  <script src="scanner.js"></script>
+
+  <script>
+    const video = document.getElementById("preview");
+    const statusText = document.getElementById("status");
+
+    // Kamera başlat
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+      .then((stream) => {
+        video.srcObject = stream;
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+
+        function scanQRCode() {
+          if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+            if (code) {
+              const tb = code.data.trim();
+              console.log("Taranan QR:", `"${tb}"`);
+
+              if (tbList.includes(tb)) {
+                statusText.innerText = `✅ Geçerli TB: ${tb}`;
+                statusText.style.color = "green";
+              } else {
+                statusText.innerText = `❌ Geçersiz TB: ${tb}`;
+                statusText.style.color = "red";
+                console.log("Listede yok:", `"${tb}"`);
+              }
+            }
+          }
+          requestAnimationFrame(scanQRCode);
+        }
+
+        requestAnimationFrame(scanQRCode);
+      })
+      .catch((err) => {
+        console.error("Kamera erişim hatası:", err);
+        statusText.innerText = "🚫 Kamera başlatılamadı!";
+      });
+  </script>
 </body>
 </html>
