@@ -1,106 +1,49 @@
-let videoElement = document.getElementById('preview');
-let canvasElement = document.createElement('canvas');
-let canvasContext = canvasElement.getContext('2d');
-let videoStream = null;
-let currentStream = null;
-let videoDevices = [];
+const video = document.getElementById('preview');
+const statusText = document.getElementById('status');
+const canvas = document.createElement('canvas');
+const context = canvas.getContext('2d');
 
-// Cihazları kontrol et
-async function getCameraDevices() {
-  try {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    videoDevices = devices.filter(device => device.kind === 'videoinput');
-    populateCameraSelect(); // Kameraları listede göster
-    return videoDevices;
-  } catch (err) {
-    console.error("Kameralar listelenirken hata oluştu: ", err);
-  }
-}
-
-// Kameralar için seçim listesini doldur
-function populateCameraSelect() {
-  const cameraSelect = document.getElementById('cameraSelect');
-  videoDevices.forEach((device, index) => {
-    const option = document.createElement('option');
-    option.value = device.deviceId;
-    option.textContent = device.label || `Kamera ${index + 1}`;
-    cameraSelect.appendChild(option);
-  });
-}
-
-// Kamerayı başlat
-async function startCamera(deviceId) {
+// Kamera başlatma fonksiyonu
+async function startCamera() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { deviceId: deviceId }
+      video: { facingMode: "environment" },
+      audio: false
     });
-
-    // Eğer önceki kamera akışı varsa durdur
-    if (currentStream) {
-      currentStream.getTracks().forEach(track => track.stop());
-    }
-
-    // Yeni akışı başlat
-    videoElement.srcObject = stream;
-    currentStream = stream;
+    video.srcObject = stream;
+    video.setAttribute("playsinline", true); // iOS için
+    requestAnimationFrame(tick);
   } catch (err) {
-    console.error("Kamera başlatılırken hata oluştu: ", err);
+    console.error("Kamera açılamadı:", err);
+    statusText.innerText = "Kamera erişimi reddedildi veya desteklenmiyor.";
   }
 }
 
-// Kamera değişim fonksiyonu
-async function switchCamera(event) {
-  const deviceId = event.target.value;
-  if (deviceId) {
-    await startCamera(deviceId);
-  }
-}
+function tick() {
+  if (video.readyState === video.HAVE_ENOUGH_DATA) {
+    canvas.height = video.videoHeight;
+    canvas.width = video.videoWidth;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height);
 
-// QR kodu çözümleme fonksiyonu
-function scanQRCode() {
-  if (videoElement.videoWidth === 0 || videoElement.videoHeight === 0) {
-    return; // Kamera görüntüsü yoksa işlemi durdur
-  }
-
-  // Canvas'a video verisini çiz
-  canvasElement.height = videoElement.videoHeight;
-  canvasElement.width = videoElement.videoWidth;
-  canvasContext.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
-
-  // QR kodunu çöz
-  const imageData = canvasContext.getImageData(0, 0, canvasElement.width, canvasElement.height);
-  const code = jsQR(imageData.data, canvasElement.width, canvasElement.height);
-
-  if (code) {
-    // QR kodu okunduğunda ekrana yazdır
-    console.log(`Taranan QR: ${code.data}`);
-    document.getElementById('status').textContent = `📦 Taranan TB: ${code.data}`;
-
-    // Burada TB'yi kontrol edip eşleştirme yapılabilir
-    if (tbList.includes(code.data)) {
-      document.getElementById('status').textContent = `✅ Geçerli TB: ${code.data}`;
-      document.getElementById('status').style.color = "green"; // Geçerli olduğunda yeşil
-    } else {
-      document.getElementById('status').textContent = `❌ Geçersiz TB: ${code.data}`;
-      document.getElementById('status').style.color = "red"; // Geçersiz olduğunda kırmızı
+    if (code) {
+      const tb = code.data.trim();
+      if (tbList.includes(tb)) {
+        statusText.innerText = `✅ Geçerli TB: ${tb}`;
+        statusText.style.color = "green";
+      } else {
+        statusText.innerText = `❌ Geçersiz TB: ${tb}`;
+        statusText.style.color = "red";
+      }
     }
-  } else {
-    document.getElementById('status').textContent = "QR kodu bulunamadı.";
   }
+  requestAnimationFrame(tick);
 }
 
-// Kamerayı başlat ve taramayı başlat
-getCameraDevices().then(() => {
-  // Varsayılan olarak ön kamerayı başlat, eğer arka kamera varsa önce onu başlat
-  const backCamera = videoDevices.find(device => device.label.toLowerCase().includes("back") || device.facingMode === "environment");
-  const frontCamera = videoDevices.find(device => device.label.toLowerCase().includes("front") || device.facingMode === "user");
-
-  // Eğer arka kamera varsa onu başlat, yoksa ön kamerayı başlat
-  if (backCamera) {
-    startCamera(backCamera.deviceId);
-  } else if (frontCamera) {
-    startCamera(frontCamera.deviceId);
-  }
-});
-
-setInterval(scanQRCode, 300); // QR kodunu her 300ms'de bir kontrol et
+// Kamera destekleniyor mu kontrolü
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+  startCamera();
+} else {
+  statusText.innerText = "Tarayıcınız kamera desteği sunmuyor.";
+}
