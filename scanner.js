@@ -91,9 +91,15 @@ function scanQRCode() {
 
 // Kamerayı başlat ve taramayı başlat
 getCameraDevices().then(() => {
-  // Varsayılan olarak ilk kamerayı başlat
-  if (videoDevices.length > 0) {
-    startCamera(videoDevices[0].deviceId);
+  // Varsayılan olarak ön kamerayı başlat, eğer arka kamera varsa önce onu başlat
+  const backCamera = videoDevices.find(device => device.label.toLowerCase().includes("back") || device.facingMode === "environment");
+  const frontCamera = videoDevices.find(device => device.label.toLowerCase().includes("front") || device.facingMode === "user");
+
+  // Eğer arka kamera varsa onu başlat, yoksa ön kamerayı başlat
+  if (backCamera) {
+    startCamera(backCamera.deviceId);
+  } else if (frontCamera) {
+    startCamera(frontCamera.deviceId);
   }
 });
 
