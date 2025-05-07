@@ -8,13 +8,14 @@
     video {
       border: 2px solid black;
       margin-bottom: 10px;
+      width: 100%;
     }
     #status {
       font-size: 1.2em;
       margin-top: 10px;
     }
     #lastScanned {
-      font-size: 1.1em;
+      font-size: 1.2em;
       margin-top: 10px;
       font-weight: bold;
       color: blue;
@@ -23,9 +24,9 @@
 </head>
 <body>
   <h1>TB Scanner</h1>
-  <video id="preview" width="100%" autoplay playsinline></video>
+  <video id="preview" autoplay playsinline></video>
   <p id="status">📷 Kamera başlatılıyor...</p>
-  <p id="lastScanned">🔍 Henüz bir QR kod taranmadı.</p>
+  <p id="lastScanned">📦 Taranan TB: Henüz yok.</p>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
   <script src="tb-list.js"></script>
@@ -35,6 +36,7 @@
     const statusText = document.getElementById("status");
     const lastScanned = document.getElementById("lastScanned");
 
+    // Kamera açma
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
       .then((stream) => {
         video.srcObject = stream;
@@ -63,10 +65,10 @@
               }
             }
           }
-          requestAnimationFrame(scanQRCode);
+          requestAnimationFrame(scanQRCode);  // Tarama işlemini sürekli yap
         }
 
-        requestAnimationFrame(scanQRCode);
+        requestAnimationFrame(scanQRCode);  // Tarama işlemini başlat
       })
       .catch((err) => {
         console.error("Kamera erişim hatası:", err);
