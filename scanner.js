@@ -7,20 +7,25 @@ const lastScanned = document.getElementById('lastScanned');
 const canvas = document.createElement('canvas');
 const context = canvas.getContext('2d');
 
-// Arka kamerayı başlatmak için "facingMode" parametresini kullanıyoruz
-navigator.mediaDevices.getUserMedia({
-  video: {
-    facingMode: "environment" // "environment" arka kamerayı ifade eder
-  }
-})
-  .then(stream => {
-    video.srcObject = stream;
-    video.play();
-    statusText.innerText = 'Kamera başlatıldı...';
+// Kamera akışını başlat
+function startCamera(facingMode = 'environment') {
+  navigator.mediaDevices.getUserMedia({
+    video: {
+      facingMode: facingMode // 'user' => ön kamera, 'environment' => arka kamera
+    }
   })
-  .catch(err => {
-    statusText.innerText = 'Kamera açılırken hata oluştu: ' + err;
-  });
+    .then(stream => {
+      video.srcObject = stream;
+      video.play();
+      statusText.innerText = 'Kamera başlatıldı...';
+    })
+    .catch(err => {
+      statusText.innerText = 'Kamera açılırken hata oluştu: ' + err;
+    });
+}
+
+// Arka kamerayı başlatıyoruz
+startCamera('environment');
 
 // QR kodu tarama işlemi
 function scanQRCode() {
@@ -28,18 +33,19 @@ function scanQRCode() {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
+
     const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
     const code = jsQR(imageData.data, canvas.width, canvas.height);
 
     if (code) {
-      const tb = code.data.trim();  // QR'dan alınan değer
-      console.log("Taranan QR:", tb);  // Taranan QR'ı konsola yazdır
+      const tb = code.data.trim(); // QR'dan alınan değer
+      console.log("Taranan QR:", tb); // Taranan QR'ı konsola yazdır
 
-      lastScanned.innerText = `📦 Taranan TB: ${tb}`;  // Ekranda göster
-      lastScanned.style.color = "green";  // Mesajın rengini yeşil yap
+      // Ekranda gösterme
+      lastScanned.innerText = `📦 Taranan TB: ${tb}`;
+      lastScanned.style.color = "green"; // Mesajın rengini yeşil yap
 
-      // QR kodu geçerli mi kontrol et
+      // QR kodunun geçerli olup olmadığını kontrol et
       if (tbList.includes(tb)) {
         statusText.innerText = `✅ Geçerli TB: ${tb}`;
         statusText.style.color = "green";
@@ -49,7 +55,7 @@ function scanQRCode() {
       }
     }
   }
-  requestAnimationFrame(scanQRCode);  // Tarama işlemini devam ettir
+  requestAnimationFrame(scanQRCode); // Tarama işlemini devam ettir
 }
 
 // Tarama işlemini başlat
