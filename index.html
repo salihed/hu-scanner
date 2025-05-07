@@ -1,78 +1,25 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TB Scanner</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-      text-align: center;
-    }
-    video {
-      border: 2px solid #333;
-      border-radius: 8px;
-      margin: 10px auto;
-      width: 100%;
-      max-width: 500px;
-      background: #000;
-    }
-    #status {
-      font-size: 1.2em;
-      margin: 15px 0;
-      padding: 10px;
-      border-radius: 5px;
-    }
-    #lastScanned {
-      font-size: 1.1em;
-      margin: 10px 0;
-      font-weight: bold;
-      color: #333;
-    }
-    .valid {
-      background-color: #e6f7e6;
-      color: #2e7d32;
-    }
-    .invalid {
-      background-color: #ffebee;
-      color: #c62828;
-    }
-    .scanning {
-      background-color: #e3f2fd;
-      color: #1565c0;
-    }
-  </style>
-  <!-- jsQR Kütüphanesi (Cloudflare CDN) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+  <title>TB Scanner_11</title>
+  <!-- 1. Önce jsQR'ı yükle -->
+  <script src="js/jsQR.js"></script>
 </head>
 <body>
-  <h1>TB Scanner_10</h1>
-  <video id="preview" autoplay playsinline muted></video>
-  
-  <div id="status" class="scanning">📷 Kamera başlatılıyor...</div>
-  <div id="lastScanned">📦 Taranan TB: Henüz yok</div>
+  <video id="preview" autoplay muted playsinline></video>
+  <div id="status">Tarama başlatılıyor...</div>
 
-  <!-- Uyarı kutusu (jsQR yüklenmezse görünecek) -->
-  <div id="jsqrWarning" style="display:none; color:red; padding:10px; border:1px solid red; margin-top:20px;">
-    jsQR kütüphanesi yüklenemedi. Lütfen internet bağlantınızı kontrol edip sayfayı yenileyin.
-  </div>
-
-  <!-- Diğer JS dosyaları -->
+  <!-- 2. Sonra diğer JS dosyalarını yükle -->
   <script src="tb-list.js"></script>
   <script src="scanner.js"></script>
 
-  <!-- jsQR yükleme kontrolü -->
+  <!-- 3. Yükleme kontrolü -->
   <script>
-    // jsQR kontrolü
     if(typeof jsQR === 'undefined') {
-      document.getElementById('jsqrWarning').style.display = 'block';
-      document.getElementById('status').textContent = '❌ Tarayıcı eklentisi eksik';
-      throw new Error("jsQR kütüphanesi yüklenemedi");
+      alert("jsQR dosyası yüklenemedi! Dosya yolunu kontrol edin.");
     } else {
-      console.log("jsQR başarıyla yüklendi:", jsQR.version);
+      console.log("jsQR başarıyla yüklendi!");
     }
   </script>
 </body>

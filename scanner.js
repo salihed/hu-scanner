@@ -1,5 +1,19 @@
 // Scanner.js - Güncel Sürüm (Tüm İyileştirmelerle)
 
+// Dosyanın en başına ekleyin
+if (typeof jsQR === 'undefined') {
+    document.getElementById('status').innerHTML = `
+      <div style="color: red; padding: 10px; border: 1px solid red;">
+        ❌ jsQR.js dosyası yüklenmedi!<br>
+        Lütfen:<br>
+        1. js/jsQR.js dosyasının varlığını kontrol edin<br>
+        2. Tarayıcı önbelleğini temizleyin (Ctrl+F5)
+      </div>
+    `;
+    throw new Error("jsQR kütüphanesi eksik");
+  }
+
+
 // DOM Elementleri
 const videoElement = document.getElementById('preview');
 const statusElement = document.getElementById('status');
