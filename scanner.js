@@ -1,34 +1,41 @@
+// Kamerayı başlatma işlemi
 const video = document.getElementById('preview');
 const statusText = document.getElementById('status');
+const lastScanned = document.getElementById('lastScanned');
+
+// QR kodu tarama için canvas oluşturma
 const canvas = document.createElement('canvas');
 const context = canvas.getContext('2d');
 
-// Kamera başlatma fonksiyonu
-async function startCamera() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment" },
-      audio: false
-    });
+// Kamerayı başlat
+navigator.mediaDevices.getUserMedia({ video: true })
+  .then(stream => {
     video.srcObject = stream;
-    video.setAttribute("playsinline", true); // iOS için
-    requestAnimationFrame(tick);
-  } catch (err) {
-    console.error("Kamera açılamadı:", err);
-    statusText.innerText = "Kamera erişimi reddedildi veya desteklenmiyor.";
-  }
-}
+    video.play();
+    statusText.innerText = 'Kamera başlatıldı...';
+  })
+  .catch(err => {
+    statusText.innerText = 'Kamera açılırken hata oluştu: ' + err;
+  });
 
-function tick() {
+// QR kodu tarama işlemi
+function scanQRCode() {
   if (video.readyState === video.HAVE_ENOUGH_DATA) {
-    canvas.height = video.videoHeight;
     canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
     const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-    const code = jsQR(imageData.data, imageData.width, imageData.height);
+    const code = jsQR(imageData.data, canvas.width, canvas.height);
 
     if (code) {
-      const tb = code.data.trim();
+      const tb = code.data.trim();  // QR'dan alınan değer
+      console.log("Taranan QR:", tb);  // Taranan QR'ı konsola yazdır
+
+      lastScanned.innerText = `📦 Taranan TB: ${tb}`;  // Ekranda göster
+      lastScanned.style.color = "green";  // Mesajın rengini yeşil yap
+
+      // QR kodu geçerli mi kontrol et
       if (tbList.includes(tb)) {
         statusText.innerText = `✅ Geçerli TB: ${tb}`;
         statusText.style.color = "green";
@@ -38,12 +45,8 @@ function tick() {
       }
     }
   }
-  requestAnimationFrame(tick);
+  requestAnimationFrame(scanQRCode);  // Tarama işlemini devam ettir
 }
 
-// Kamera destekleniyor mu kontrolü
-if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-  startCamera();
-} else {
-  statusText.innerText = "Tarayıcınız kamera desteği sunmuyor.";
-}
+// Tarama işlemini başlat
+scanQRCode();

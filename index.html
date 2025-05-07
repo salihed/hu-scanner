@@ -4,76 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>TB Scanner</title>
-  <style>
-    video {
-      border: 2px solid black;
-      margin-bottom: 10px;
-      width: 100%;
-    }
-    #status {
-      font-size: 1.2em;
-      margin-top: 10px;
-    }
-    #lastScanned {
-      font-size: 1.2em;
-      margin-top: 10px;
-      font-weight: bold;
-      color: blue;
-    }
-  </style>
 </head>
 <body>
   <h1>TB Scanner</h1>
-  <video id="preview" autoplay playsinline></video>
-  <p id="status">📷 Kamera başlatılıyor...</p>
-  <p id="lastScanned">📦 Taranan TB: Henüz yok.</p>
-
+  <video id="preview" width="100%" autoplay playsinline></video>
+  <p id="status">Kamera başlatılıyor...</p>
+  <p id="lastScanned">📦 Taranan TB: Yok</p> <!-- Taranan TB burada görünecek -->
+  
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
-  <script src="tb-list.js"></script>
-
-  <script>
-    const video = document.getElementById("preview");
-    const statusText = document.getElementById("status");
-    const lastScanned = document.getElementById("lastScanned");
-
-    // Kamera açma
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-      .then((stream) => {
-        video.srcObject = stream;
-        const canvas = document.createElement("canvas");
-        const context = canvas.getContext("2d");
-
-        function scanQRCode() {
-          if (video.readyState === video.HAVE_ENOUGH_DATA) {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            context.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-            const code = jsQR(imageData.data, imageData.width, imageData.height);
-
-            if (code) {
-              const tb = code.data.trim();
-              console.log("Taranan QR:", `"${tb}"`);
-              lastScanned.innerText = `📦 Taranan TB: ${tb}`;
-
-              if (tbList.includes(tb)) {
-                statusText.innerText = `✅ Geçerli TB: ${tb}`;
-                statusText.style.color = "green";
-              } else {
-                statusText.innerText = `❌ Geçersiz TB: ${tb}`;
-                statusText.style.color = "red";
-              }
-            }
-          }
-          requestAnimationFrame(scanQRCode);  // Tarama işlemini sürekli yap
-        }
-
-        requestAnimationFrame(scanQRCode);  // Tarama işlemini başlat
-      })
-      .catch((err) => {
-        console.error("Kamera erişim hatası:", err);
-        statusText.innerText = "🚫 Kamera başlatılamadı!";
-      });
-  </script>
+  <script src="tb-list.js"></script> <!-- Bu dosya doğru yolda olmalı -->
+  <script src="scanner.js"></script> <!-- Kamera ve QR kod işleme burada yapılacak -->
 </body>
 </html>
