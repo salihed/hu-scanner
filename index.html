@@ -1,70 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code Scanner</title>
-    <style>
-        video {
-            width: 100%; /* Kamerayı tam ekran genişliğinde göstermek */
-            height: auto; /* Yüksekliği oranlı olarak ayarla */
-            border: 1px solid black;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TB Scanner</title>
 </head>
 <body>
-    <h1>QR Kod Tarayıcı</h1>
+  <h1>TB Scanner</h1>
+  <video id="preview" width="100%" autoplay playsinline></video>
+  <p id="status">Kamera başlatılıyor...</p>
 
-    <!-- Video etiketi ile kamerayı ekranda göstereceğiz -->
-    <video id="videoElement" autoplay></video>
-
-    <!-- QR Kodunu göstermek için bir alan -->
-    <div id="result"></div>
-
-    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
-    <script>
-        // Video elementini seç
-        const videoElement = document.getElementById("videoElement");
-
-        // Kamerayı başlatan fonksiyon
-        async function startCamera() {
-            try {
-                // Kameraya erişim izni al ve video elementine akış ver
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                videoElement.srcObject = stream;
-            } catch (err) {
-                console.error("Kamera başlatılamadı: ", err);
-            }
-        }
-
-        // Kamerayı başlat
-        startCamera();
-
-        // QR kodunu okutma fonksiyonu
-        function startScanning() {
-            const html5QrCode = new Html5Qrcode("reader");
-
-            html5QrCode.start(
-                { facingMode: "environment" },  // Arka kamera
-                {
-                    fps: 10,   // Tarama hızı
-                    qrbox: 250  // Tarama kutusu boyutu
-                },
-                (decodedText, decodedResult) => {
-                    console.log(decodedText); // QR kodu okunduğunda
-                    document.getElementById("result").innerText = `QR Kodu: ${decodedText}`;
-                },
-                (errorMessage) => {
-                    // Tarama sırasında hata mesajı
-                    console.error(errorMessage);
-                }
-            ).catch((err) => {
-                console.error("QR kodu tarayıcı hatası: ", err);
-            });
-        }
-
-        // Tarayıcı başlatma
-        startScanning();
-    </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+  <script src="tb-list.js"></script>
+  <script src="scanner.js"></script>
 </body>
 </html>
