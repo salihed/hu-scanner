@@ -1,49 +1,77 @@
-const video = document.getElementById('preview');
-const statusText = document.getElementById('status');
-const canvas = document.createElement('canvas');
-const context = canvas.getContext('2d');
+let videoElement = document.getElementById('preview');
+let canvasElement = document.createElement('canvas');
+let canvasContext = canvasElement.getContext('2d');
+let videoStream = null;
 
-// Kamera başlatma fonksiyonu
+// Cihazları kontrol et
+async function getCameraDevices() {
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const videoDevices = devices.filter(device => device.kind === 'videoinput');
+    return videoDevices;
+  } catch (err) {
+    console.error("Kameralar listelenirken hata oluştu: ", err);
+  }
+}
+
+// Kamerayı başlat
 async function startCamera() {
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment" },
-      audio: false
-    });
-    video.srcObject = stream;
-    video.setAttribute("playsinline", true); // iOS için
-    requestAnimationFrame(tick);
-  } catch (err) {
-    console.error("Kamera açılamadı:", err);
-    statusText.innerText = "Kamera erişimi reddedildi veya desteklenmiyor.";
-  }
-}
+    const videoDevices = await getCameraDevices();
 
-function tick() {
-  if (video.readyState === video.HAVE_ENOUGH_DATA) {
-    canvas.height = video.videoHeight;
-    canvas.width = video.videoWidth;
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-    const code = jsQR(imageData.data, imageData.width, imageData.height);
+    // Arka kamerayı bulmaya çalış
+    let backCamera = videoDevices.find(device => device.label.toLowerCase().includes("back") || device.facingMode === "environment");
 
-    if (code) {
-      const tb = code.data.trim();
-      if (tbList.includes(tb)) {
-        statusText.innerText = `✅ Geçerli TB: ${tb}`;
-        statusText.style.color = "green";
-      } else {
-        statusText.innerText = `❌ Geçersiz TB: ${tb}`;
-        statusText.style.color = "red";
-      }
+    if (!backCamera) {
+      console.error("Arka kamera bulunamadı.");
+      return;
     }
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { deviceId: backCamera.deviceId }
+    });
+
+    // Videoyu başlat
+    videoElement.srcObject = stream;
+    videoStream = stream;
+  } catch (err) {
+    console.error("Kamera başlatılırken hata oluştu: ", err);
   }
-  requestAnimationFrame(tick);
 }
 
-// Kamera destekleniyor mu kontrolü
-if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-  startCamera();
-} else {
-  statusText.innerText = "Tarayıcınız kamera desteği sunmuyor.";
+// QR kodu çözümleme fonksiyonu
+function scanQRCode() {
+  if (videoElement.videoWidth === 0 || videoElement.videoHeight === 0) {
+    return; // Kamera görüntüsü yoksa işlemi durdur
+  }
+
+  // Canvas'a video verisini çiz
+  canvasElement.height = videoElement.videoHeight;
+  canvasElement.width = videoElement.videoWidth;
+  canvasContext.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+
+  // QR kodunu çöz
+  const imageData = canvasContext.getImageData(0, 0, canvasElement.width, canvasElement.height);
+  const code = jsQR(imageData.data, canvasElement.width, canvasElement.height);
+
+  if (code) {
+    // QR kodu okunduğunda ekrana yazdır
+    console.log(`Taranan QR: ${code.data}`);
+    document.getElementById('status').textContent = `📦 Taranan TB: ${code.data}`;
+
+    // Burada TB'yi kontrol edip eşleştirme yapılabilir
+    if (tbList.includes(code.data)) {
+      document.getElementById('status').textContent = `✅ Geçerli TB: ${code.data}`;
+      document.getElementById('status').style.color = "green"; // Geçerli olduğunda yeşil
+    } else {
+      document.getElementById('status').textContent = `❌ Geçersiz TB: ${code.data}`;
+      document.getElementById('status').style.color = "red"; // Geçersiz olduğunda kırmızı
+    }
+  } else {
+    document.getElementById('status').textContent = "QR kodu bulunamadı.";
+  }
 }
+
+// Kamerayı başlat ve taramayı başlat
+startCamera();
+setInterval(scanQRCode, 300); // QR kodunu her 300ms'de bir kontrol et
