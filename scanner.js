@@ -2,40 +2,57 @@ let videoElement = document.getElementById('preview');
 let canvasElement = document.createElement('canvas');
 let canvasContext = canvasElement.getContext('2d');
 let videoStream = null;
+let currentStream = null;
+let videoDevices = [];
 
 // Cihazları kontrol et
 async function getCameraDevices() {
   try {
     const devices = await navigator.mediaDevices.enumerateDevices();
-    const videoDevices = devices.filter(device => device.kind === 'videoinput');
+    videoDevices = devices.filter(device => device.kind === 'videoinput');
+    populateCameraSelect(); // Kameraları listede göster
     return videoDevices;
   } catch (err) {
     console.error("Kameralar listelenirken hata oluştu: ", err);
   }
 }
 
+// Kameralar için seçim listesini doldur
+function populateCameraSelect() {
+  const cameraSelect = document.getElementById('cameraSelect');
+  videoDevices.forEach((device, index) => {
+    const option = document.createElement('option');
+    option.value = device.deviceId;
+    option.textContent = device.label || `Kamera ${index + 1}`;
+    cameraSelect.appendChild(option);
+  });
+}
+
 // Kamerayı başlat
-async function startCamera() {
+async function startCamera(deviceId) {
   try {
-    const videoDevices = await getCameraDevices();
-
-    // Arka kamerayı bulmaya çalış
-    let backCamera = videoDevices.find(device => device.label.toLowerCase().includes("back") || device.label.toLowerCase().includes("arxa"));
-
-    // Eğer arka kamera yoksa, ön kamerayı kullan
-    let cameraDevice = backCamera || videoDevices[0];
-
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        deviceId: cameraDevice.deviceId
-      }
+      video: { deviceId: deviceId }
     });
 
-    // Videoyu başlat
+    // Eğer önceki kamera akışı varsa durdur
+    if (currentStream) {
+      currentStream.getTracks().forEach(track => track.stop());
+    }
+
+    // Yeni akışı başlat
     videoElement.srcObject = stream;
-    videoStream = stream;
+    currentStream = stream;
   } catch (err) {
     console.error("Kamera başlatılırken hata oluştu: ", err);
+  }
+}
+
+// Kamera değişim fonksiyonu
+async function switchCamera(event) {
+  const deviceId = event.target.value;
+  if (deviceId) {
+    await startCamera(deviceId);
   }
 }
 
@@ -73,5 +90,11 @@ function scanQRCode() {
 }
 
 // Kamerayı başlat ve taramayı başlat
-startCamera();
+getCameraDevices().then(() => {
+  // Varsayılan olarak ilk kamerayı başlat
+  if (videoDevices.length > 0) {
+    startCamera(videoDevices[0].deviceId);
+  }
+});
+
 setInterval(scanQRCode, 300); // QR kodunu her 300ms'de bir kontrol et
