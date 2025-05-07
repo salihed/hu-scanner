@@ -7,8 +7,12 @@ const lastScanned = document.getElementById('lastScanned');
 const canvas = document.createElement('canvas');
 const context = canvas.getContext('2d');
 
-// Kamerayı başlat
-navigator.mediaDevices.getUserMedia({ video: true })
+// Arka kamerayı başlatmak için "facingMode" parametresini kullanıyoruz
+navigator.mediaDevices.getUserMedia({
+  video: {
+    facingMode: "environment" // "environment" arka kamerayı ifade eder
+  }
+})
   .then(stream => {
     video.srcObject = stream;
     video.play();
