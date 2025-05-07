@@ -19,7 +19,7 @@ async function startCamera() {
   try {
     const videoDevices = await getCameraDevices();
 
-    // Önce arka kamerayı bulmaya çalış
+    // Arka kamerayı bulmaya çalış
     let backCamera = videoDevices.find(device => device.label.toLowerCase().includes("back") || device.label.toLowerCase().includes("arxa"));
 
     // Eğer arka kamera yoksa, ön kamerayı kullan
@@ -55,10 +55,17 @@ function scanQRCode() {
   const code = jsQR(imageData.data, canvasElement.width, canvasElement.height);
 
   if (code) {
-    document.getElementById('status').textContent = `Taranan QR: ${code.data}`;
+    // QR kodu okunduğunda ekrana yazdır
+    console.log(`Taranan QR: ${code.data}`);
+    document.getElementById('status').textContent = `📦 Taranan TB: ${code.data}`;
+
     // Burada TB'yi kontrol edip eşleştirme yapılabilir
     if (tbList.includes(code.data)) {
-      document.getElementById('status').textContent = `📦 Taranan TB: ${code.data}`;
+      document.getElementById('status').textContent = `✅ Geçerli TB: ${code.data}`;
+      document.getElementById('status').style.color = "green"; // Geçerli olduğunda yeşil
+    } else {
+      document.getElementById('status').textContent = `❌ Geçersiz TB: ${code.data}`;
+      document.getElementById('status').style.color = "red"; // Geçersiz olduğunda kırmızı
     }
   } else {
     document.getElementById('status').textContent = "QR kodu bulunamadı.";

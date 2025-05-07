@@ -3,12 +3,30 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TB Scanner_v2</title>
+  <title>TB Scanner</title>
+  <style>
+    video {
+      border: 2px solid black;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+    #status {
+      font-size: 1.2em;
+      margin-top: 10px;
+    }
+    #lastScanned {
+      font-size: 1.2em;
+      margin-top: 10px;
+      font-weight: bold;
+      color: blue;
+    }
+  </style>
 </head>
 <body>
-  <h1>TB Scanner_v2</h1>
-  <video id="preview" width="100%" autoplay playsinline></video>
-  <p id="status">Kamera başlatılıyor...</p>
+  <h1>TB Scanner_v3</h1>
+  <video id="preview" autoplay playsinline></video>
+  <p id="status">📷 Kamera başlatılıyor...</p>
+  <p id="lastScanned">📦 Taranan TB: Henüz yok.</p>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
   <script src="tb-list.js"></script>
