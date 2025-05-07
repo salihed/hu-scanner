@@ -1,62 +1,80 @@
-// Kamerayı başlatma işlemi
-const video = document.getElementById('preview');
-const statusText = document.getElementById('status');
-const lastScanned = document.getElementById('lastScanned');
+// Kamera cihazlarını almak ve arka kamerayı kullanmak
+navigator.mediaDevices.enumerateDevices()
+  .then(devices => {
+    let videoDeviceId = null;
 
-// QR kodu tarama için canvas oluşturma
-const canvas = document.createElement('canvas');
-const context = canvas.getContext('2d');
+    // Cihazlar arasında gezerek, video (kamera) cihazlarını buluyoruz
+    devices.forEach(device => {
+      if (device.kind === 'videoinput') {
+        // Eğer arka kamera (back camera) varsa, id'sini alıyoruz
+        if (device.label.toLowerCase().includes("back") || device.label.toLowerCase().includes("rear")) {
+          videoDeviceId = device.deviceId;
+        }
+      }
+    });
 
-// Kamera akışını başlat
-function startCamera(facingMode = 'environment') {
-  navigator.mediaDevices.getUserMedia({
-    video: {
-      facingMode: facingMode // 'user' => ön kamera, 'environment' => arka kamera
+    // Eğer arka kamera bulunmuşsa, onu kullanıyoruz
+    if (videoDeviceId) {
+      navigator.mediaDevices.getUserMedia({
+        video: { deviceId: videoDeviceId }
+      }).then(stream => {
+        const videoElement = document.getElementById('preview');
+        videoElement.srcObject = stream;
+        videoElement.play();  // Videoyu başlatıyoruz
+      }).catch(error => {
+        console.error("Kamera erişim hatası:", error);
+      });
+    } else {
+      // Eğer arka kamera bulunamazsa, varsayılan olarak ön kamerayı kullanıyoruz
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+          const videoElement = document.getElementById('preview');
+          videoElement.srcObject = stream;
+          videoElement.play();  // Videoyu başlatıyoruz
+        })
+        .catch(error => {
+          console.error("Kamera erişim hatası:", error);
+        });
     }
   })
-    .then(stream => {
-      video.srcObject = stream;
-      video.play();
-      statusText.innerText = 'Kamera başlatıldı...';
-    })
-    .catch(err => {
-      statusText.innerText = 'Kamera açılırken hata oluştu: ' + err;
-    });
-}
+  .catch(error => {
+    console.error("Cihazları listeleme hatası:", error);
+  });
 
-// Arka kamerayı başlatıyoruz
-startCamera('environment');
-
-// QR kodu tarama işlemi
 function scanQRCode() {
-  if (video.readyState === video.HAVE_ENOUGH_DATA) {
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  const videoElement = document.getElementById('preview');
+  const canvasElement = document.createElement('canvas');
+  const canvasContext = canvasElement.getContext('2d');
 
-    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-    const code = jsQR(imageData.data, canvas.width, canvas.height);
+  // Video'nun boyutlarını ayarlıyoruz
+  canvasElement.height = videoElement.videoHeight;
+  canvasElement.width = videoElement.videoWidth;
 
-    if (code) {
-      const tb = code.data.trim(); // QR'dan alınan değer
-      console.log("Taranan QR:", tb); // Taranan QR'ı konsola yazdır
+  // Video görüntüsünü alıyoruz
+  canvasContext.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
 
-      // Ekranda gösterme
-      lastScanned.innerText = `📦 Taranan TB: ${tb}`;
-      lastScanned.style.color = "green"; // Mesajın rengini yeşil yap
+  // QR kodu tarıyoruz
+  const imageData = canvasContext.getImageData(0, 0, canvasElement.width, canvasElement.height);
+  const code = jsQR(imageData.data, canvasElement.width, canvasElement.height);
 
-      // QR kodunun geçerli olup olmadığını kontrol et
-      if (tbList.includes(tb)) {
-        statusText.innerText = `✅ Geçerli TB: ${tb}`;
-        statusText.style.color = "green";
-      } else {
-        statusText.innerText = `❌ Geçersiz TB: ${tb}`;
-        statusText.style.color = "red";
-      }
+  if (code) {
+    // QR kodu bulundu
+    document.getElementById('status').textContent = `Taranan TB: ${code.data}`;
+
+    // TB verisi ile karşılaştırma yapıyoruz
+    const foundTB = tbList.find(tb => tb.tb === code.data);
+    if (foundTB) {
+      alert(`Çıkış Yeri TB: ${foundTB.name}`);
+    } else {
+      alert("Geçersiz TB kodu");
     }
   }
-  requestAnimationFrame(scanQRCode); // Tarama işlemini devam ettir
+
+  // QR taramasını sürekli tekrarlıyoruz
+  requestAnimationFrame(scanQRCode);
 }
 
-// Tarama işlemini başlat
-scanQRCode();
+// Kamera açılınca hemen taramaya başla
+window.onload = function() {
+  scanQRCode();
+};
