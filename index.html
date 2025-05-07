@@ -1,27 +1,95 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>TB Scanner_12</title>
-  <!-- 1. Önce jsQR'ı yükle -->
-  <script src="js/jsQR.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TB Scanner_13</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background-color: #f4f4f9;
+    }
+    video {
+      width: 100%;
+      max-width: 400px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+    }
+    #status {
+      font-size: 1.2em;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .scanning {
+      color: #aaa;
+    }
+    .valid {
+      color: green;
+    }
+    .invalid {
+      color: red;
+    }
+    #lastScanned {
+      font-size: 1.1em;
+      color: #333;
+      margin-top: 10px;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 20px;
+      width: 100%;
+      max-width: 400px;
+      text-align: left;
+    }
+    li {
+      padding: 8px;
+      border: 1px solid #ccc;
+      margin-bottom: 5px;
+      border-radius: 5px;
+    }
+    .valid {
+      background-color: #e0f7e0;
+    }
+    .invalid {
+      background-color: #ffebeb;
+    }
+  </style>
 </head>
 <body>
+
+  <h1>TB Scanner_12</h1>
+
+  <!-- Kamera görüntüsü -->
   <video id="preview" autoplay muted playsinline></video>
+
+  <!-- Durum mesajı -->
   <div id="status" class="scanning">📷 Kamera başlatılıyor...</div>
+
+  <!-- Son taranan kodu göster -->
   <div id="lastScanned">📦 Taranan TB: Henüz yok</div>
 
-  <!-- 2. Sonra diğer JS dosyalarını yükle -->
-  <script src="tb-list.js"></script>
-  <script src="scanner.js"></script>
+  <!-- Tarama geçmişi -->
+  <ul id="historyList"></ul>
 
-  <!-- 3. Yükleme kontrolü -->
+  <!-- JS dosyalarını dahil et -->
+  <script src="js/jsQR.js"></script> <!-- jsQR kütüphanesini yükle -->
+  <script src="js/tb-list.js"></script> <!-- TB listesi -->
+  <script src="js/scanner.js"></script> <!-- Tarayıcı ve işleme scripti -->
+
+  <!-- Yükleme kontrolü -->
   <script>
-    if(typeof jsQR === 'undefined') {
+    if (typeof jsQR === 'undefined') {
       alert("jsQR dosyası yüklenemedi! Dosya yolunu kontrol edin.");
     } else {
       console.log("jsQR başarıyla yüklendi!");
     }
   </script>
+
 </body>
 </html>
