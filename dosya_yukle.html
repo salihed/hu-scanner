@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Yükle ve Firebase'e Aktar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        input[type="file"] {
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #status {
+            margin-top: 20px;
+            font-size: 18px;
+            color: green;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>CSV Dosyası Yükleyin</h1>
+    <input type="file" id="csvFile" accept=".csv">
+    <button id="uploadButton">CSV'yi Yükle ve Firebase'e Aktar</button>
+
+    <div id="status"></div>
+
+    <!-- Firebase SDK ve Script dosyasını yükleyin -->
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-firestore.js"></script>
+
+    <!-- Firebase ve CSV işlemleri için JavaScript -->
+    <script>
+        // Firebase yapılandırma ayarları
+        const firebaseConfig = {
+            apiKey: "AIzaSyCl4xH2on7Xb0UiLzJq_-PqQcLtcWpnDCE", // Firebase API Key
+            authDomain: "husearch-e2cdd.firebaseapp.com",
+            projectId: "husearch-e2cdd",
+            storageBucket: "husearch-e2cdd.firebasestorage.app",
+            messagingSenderId: "493356143603",
+            appId: "1:493356143603:web:783c14375db314b94eb886"
+        };
+
+        // Firebase'i başlat
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore(app);
+
+        // CSV dosyasını işleme
+        function handleCSVFile(file) {
+            const reader = new FileReader();
+
+            reader.onload = function(event) {
+                const csvData = event.target.result;
+                const rows = csvData.split("\n");
+                const headers = rows[0].split(","); // Başlıkları ayır
+
+                // Her bir veri satırını işleme
+                rows.slice(1).forEach(row => {
+                    const data = row.split(",");
+                    if (data.length === headers.length) {
+                        const productData = {
+                            TB: data[0].trim(),
+                            Ürün: data[1].trim(),
+                            Parti: data[2].trim(),
+                            'Ürün kısa tanımı': data[3].trim(),
+                            Miktar: data[4].trim(),
+                            Ağırlık: data[5].trim()
+                        };
+
+                        // Firestore'a ekleme
+                        db.collection("tb-data").add(productData)
+                            .then(() => {
+                                console.log("Veri başarıyla eklendi:", productData);
+                            })
+                            .catch((error) => {
+                                console.error("Veri eklenirken hata:", error);
+                            });
+                    }
+                });
+
+                // Yükleme başarılı olduğunda mesaj göster
+                document.getElementById("status").textContent = "CSV dosyası başarıyla Firebase'e aktarıldı!";
+            };
+
+            // Dosyayı okuyun
+            reader.readAsText(file);
+        }
+
+        // Dosya yükleme butonuna tıklama işlemi
+        document.getElementById("uploadButton").addEventListener("click", function() {
+            const fileInput = document.getElementById("csvFile");
+            const file = fileInput.files[0];
+
+            if (file) {
+                handleCSVFile(file);
+            } else {
+                alert("Lütfen bir CSV dosyası seçin.");
+            }
+        });
+    </script>
+
+</body>
+</html>
